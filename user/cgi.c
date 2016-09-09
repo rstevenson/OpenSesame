@@ -180,7 +180,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 				temp, humi, (int)sysCfg.Lock_input==2?1:0, currGPIO12State,(char *)sysCfg.relay1name,(int)sysCfg.Lockopmode, (int)sysCfg.Lockstate, (int)sysCfg.Lockmanualsetpoint,(int)sysCfg.Lockmode);
 
 			*/
-			os_sprintf(buff,"{\"manualsetpoint\":\"1000\"\n,\"mode\":\"0\"\n,\"curLockState\":\"0\"}\n");
+			os_sprintf(buff,"{\"mode\":\"0\"\n,\"curLockState\":\"0\"}\n");
 		}
 
 		if(os_strcmp(buff,"temperature")==0) {

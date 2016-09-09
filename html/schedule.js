@@ -105,11 +105,11 @@ $("#relay1").click(function () {
 	if (thermostat.relay1state > 1) thermostat.relay1state = 0;
 
     if (thermostat.relay1state==1) {
-        $(this).html("ON");
+        $(this).html("OPEN");
         $(this).css("background-color", "#ff9600");
     }
     else {
-        $(this).html("OFF");
+        $(this).html("LOCKED");
         $(this).css("background-color", "#555");
     }
 
@@ -181,10 +181,10 @@ function update() {
 	}
 	
 	if (state.state === 1) {
-		$("#toggle").html("ON");
+		$("#toggle").html("OPEN");
 		$("#toggle").css("background-color", "#ff9600");
 	} else {
-		$("#toggle").html("OFF");
+		$("#toggle").html("LOCKED");
 		$("#toggle").css("background-color", "#555");
 	}
 	
@@ -206,11 +206,11 @@ $("#toggle").click(function () {
     thermostat.state++;
     if (thermostat.state > 1) thermostat.state = 0;
     if (thermostat.state == 1) {
-        $("#toggle").html("ON");
+        $("#toggle").html("OPEN");
         $(this).css("background-color", "#ff9600");
     }
     else {
-        $("#toggle").html("OFF");
+        $("#toggle").html("LOCKED");
         $(this).css("background-color", "#555");
     }
 
@@ -564,7 +564,6 @@ function server_get() {
 					connected=true;
 					output = data;
 					thermostat=data;
-					thermostat.manualsetpoint/=100;
 					update();
 				}
 			},
