@@ -19,9 +19,10 @@
 	<div id="datetime"></div>
     <hr>
     <div id="slider-segment-blank">
-        <div id="slider-segment-block" style="display:none">START:
-            <input type="text" id="slider-segment-start" style="margin-right:4px" />END:
-            <input type="text" id="slider-segment-end" style="margin-right:4px" /></span>
+        <div id="slider-segment-block" style="display:none">Start:
+            <input type="text" id="slider-segment-start" style="margin-right:4px" />End:
+            <input type="text" id="slider-segment-end" style="margin-right:4px" />Auto Lock
+            <input type="checkbox" id="slider-segment-autoLock" /><span id="unit"></span>
             <button id="slider-segment-ok" style="float:right">OK</button>
         </div>
         <div id="slider-segment-block-movepos" style="display:none">TIME:
@@ -43,7 +44,6 @@
         <button id="mode-merge" class="btn-small btn-center editmode">Merge</button>
         <button id="mode-move" class="btn-small btn-right editmode">Move</button>
     </div>
-    <p style="display:none">Average schedule temperature: <span id="average_temperature"></span>&deg;C</p>
     <p style="display:none">Schedule JSON: <span class="schedule_json"></span>
 
     </p>	

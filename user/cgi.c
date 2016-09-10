@@ -180,7 +180,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 				temp, humi, (int)sysCfg.Lock_input==2?1:0, currGPIO12State,(char *)sysCfg.relay1name,(int)sysCfg.Lockopmode, (int)sysCfg.Lockstate, (int)sysCfg.Lockmanualsetpoint,(int)sysCfg.Lockmode);
 
 			*/
-			os_sprintf(buff,"{\"mode\":\"0\"\n,\"curLockState\":\"0\"}\n");
+			os_sprintf(buff,"{\"manualsetpoint\":\"1000\"\n,\"mode\":\"0\"\n,\"curLockState\":\"0\"}\n");
 		}
 
 		if(os_strcmp(buff,"temperature")==0) {
@@ -324,7 +324,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 				for(int dow=0; dow<7; dow++) {
 					os_sprintf(buff+strlen(buff),"\"%s\":[",days[dow]);
 					for(int sched=0; sched<8 && sysCfg.Lockschedule.weekSched[dow].daySched[sched].active==1; sched++) {
-						os_sprintf(buff+strlen(buff),"{\"s\":%d,\"e\":%d,\"sp\":%d}",sysCfg.Lockschedule.weekSched[dow].daySched[sched].start,sysCfg.Lockschedule.weekSched[dow].daySched[sched].end,sysCfg.Lockschedule.weekSched[dow].daySched[sched].setpoint);
+						os_sprintf(buff+strlen(buff),"{\"s\":%d,\"e\":%d,\"sp\":%d,\"al\":%d}",sysCfg.Lockschedule.weekSched[dow].daySched[sched].start,sysCfg.Lockschedule.weekSched[dow].daySched[sched].end,sysCfg.Lockschedule.weekSched[dow].daySched[sched].setpoint,0);
 							if(sched<7 && sysCfg.Lockschedule.weekSched[dow].daySched[sched+1].active==1)
 							os_sprintf(buff+strlen(buff),",");
 					}

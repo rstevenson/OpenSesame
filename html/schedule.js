@@ -36,23 +36,28 @@ var schedule = {};
 var day1 = [{
     s: 0,
     e: 600,
-    sp: 0
+    sp: 0,
+    al: 0
 }, {
     s: 600,
     e: 900,
-    sp: 1800
+    sp: 0,
+    al: 0
 }, {
     s: 900,
     e: 1700,
-    sp: 1200
+    sp: 0,
+    al: 0
 }, {
     s: 1700,
     e: 2200,
-    sp: 0
+    sp: 0,
+    al: 0
 }, {
     s: 2200,
     e: 2400,
-    sp: 800
+    sp: 0,
+    al: 0
 }];
 
 schedule['mon'] = JSON.parse(JSON.stringify(day1));
@@ -68,7 +73,8 @@ for (var d in schedule) {
     for (var z in schedule[d]) {
         schedule[d][z].s /= 100;
         schedule[d][z].e /= 100;
-        schedule[d][z].sp /= 100;
+        schedule[d][z].sp /= 1;
+        schedule[d][z].al /= 1;
     }
 }
 
@@ -105,11 +111,11 @@ $("#relay1").click(function () {
 	if (thermostat.relay1state > 1) thermostat.relay1state = 0;
 
     if (thermostat.relay1state==1) {
-        $(this).html("OPEN");
+        $(this).html("ON");
         $(this).css("background-color", "#ff9600");
     }
     else {
-        $(this).html("LOCKED");
+        $(this).html("OFF");
         $(this).css("background-color", "#555");
     }
 
@@ -181,10 +187,10 @@ function update() {
 	}
 	
 	if (state.state === 1) {
-		$("#toggle").html("OPEN");
+		$("#toggle").html("ON");
 		$("#toggle").css("background-color", "#ff9600");
 	} else {
-		$("#toggle").html("LOCKED");
+		$("#toggle").html("OFF");
 		$("#toggle").css("background-color", "#555");
 	}
 	
@@ -206,11 +212,11 @@ $("#toggle").click(function () {
     thermostat.state++;
     if (thermostat.state > 1) thermostat.state = 0;
     if (thermostat.state == 1) {
-        $("#toggle").html("OPEN");
+        $("#toggle").html("ON");
         $(this).css("background-color", "#ff9600");
     }
     else {
-        $("#toggle").html("LOCKED");
+        $("#toggle").html("OFF");
         $(this).css("background-color", "#555");
     }
 
@@ -358,7 +364,6 @@ function slider_update(e) {
         }
         $("#slider-segment-time").val(format_time(schedule[day][key].s));
     }
-    // $("#average_temperature").html(calc_average_schedule_temperature().toFixed(1));
 
 
 }
