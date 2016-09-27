@@ -6,7 +6,7 @@
 #define ICACHE_RAM_ATTR __attribute__((section(".iram0.text")))
 #define ICACHE_RODATA_ATTR __attribute__((section(".irom.text")))
 
-#define CFG_HOLDER	0x00FF55A2
+#define CFG_HOLDER	0x00FF55A3
 #define CFG_LOCATION	0x3C
 
 #define NTP_ENABLE    1

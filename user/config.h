@@ -36,13 +36,17 @@
 #define LOCK_MANUAL 0
 #define LOCK_AUTO 1
 
-#define LOCKED 0
-#define UNLOCKED 1
+#define LOCKED 1
+#define UNLOCKED 0
+#define FAILEDTOLOCK	11
+#define FAILEDTOUNLOCK	10
 
 typedef struct {
  uint16_t start;
  uint16_t end;
- uint16_t setpoint;  // Locked=1, Unlocked=0
+ uint16_t setpoint;  // Lock=1, Unlock=0
+ uint16_t autolock;
+ uint16_t autotimeout;
  uint16_t active; 	 // pad to 4 byte boundary
  } dayScheduleElement;
  
@@ -85,6 +89,9 @@ uint32_t Lockstate;
 uint32_t Lockmanualsetpoint;
 uint32_t Lockmode;
 uint32_t Lockopmode;
+uint32_t LockLastSP;
+uint32_t LockLastDaySched;
+uint32_t LockLastMode;
 weekSchedule Lockschedule;
 
 	
@@ -92,7 +99,7 @@ weekSchedule Lockschedule;
 
 typedef struct {
     uint8 flag;
-    uint8 pad[3];
+    uint8 pad[4];
 } SAVE_FLAG;
 
 void CFG_Save();

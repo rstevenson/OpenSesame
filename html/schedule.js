@@ -21,7 +21,7 @@ var visibleFlag = 1;
 var statusMsg = false;
 var connected = false;
 
-var thermostat = {
+var lock = {
 	roomtemperature: "21",
 	relay1state: 0,
 	relay1name: "Zone Name",
@@ -37,27 +37,32 @@ var day1 = [{
     s: 0,
     e: 600,
     sp: 0,
-    al: 0
+    al: 0,
+    at: 30
 }, {
     s: 600,
     e: 900,
     sp: 0,
-    al: 0
+    al: 0,
+    at: 30
 }, {
     s: 900,
     e: 1700,
     sp: 0,
-    al: 0
+    al: 0,
+    at: 30
 }, {
     s: 1700,
     e: 2200,
     sp: 0,
-    al: 0
+    al: 0,
+    at: 30
 }, {
     s: 2200,
     e: 2400,
     sp: 0,
-    al: 0
+    al: 0,
+    at: 30
 }];
 
 schedule['mon'] = JSON.parse(JSON.stringify(day1));
@@ -75,6 +80,7 @@ for (var d in schedule) {
         schedule[d][z].e /= 100;
         schedule[d][z].sp /= 1;
         schedule[d][z].al /= 1;
+        schedule[d][z].at /= 1;
     }
 }
 
@@ -103,14 +109,14 @@ $("#relay1").click(function () {
 
     $(".mode").css("background-color", "#555");
     $("#btn").css("background-color", "#ff9600");
-    thermostat.mode = 0;
+    lock.mode = 0;
 
-    save("thermostat_mode", (thermostat.mode).toString());    
+    save("thermostat_mode", (lock.mode).toString());    
     
-    thermostat.relay1state++;
-	if (thermostat.relay1state > 1) thermostat.relay1state = 0;
+    lock.relay1state++;
+	if (lock.relay1state > 1) lock.relay1state = 0;
 
-    if (thermostat.relay1state==1) {
+    if (lock.relay1state==1) {
         $(this).html("ON");
         $(this).css("background-color", "#ff9600");
     }
@@ -119,7 +125,7 @@ $("#relay1").click(function () {
         $(this).css("background-color", "#555");
     }
 
-    save("relay1state", thermostat.relay1state);
+    save("relay1state", lock.relay1state);
 });
 
 
@@ -178,23 +184,27 @@ function update() {
 
 	$(".zone-title").html(state.relay1name);
 	    
-	if (state.curLockState == 1) {
-		$("#current-state").html("Locked");
-		//$("#relay1").css("background-color", "#ff9600");
-	} else {
+	if (lock.curLockState == 0) {
 		$("#current-state").html("Unlocked");
-		//$("#relay1").css("background-color", "#555");
+	} else if (lock.curLockState == 1) {
+		$("#current-state").html("Locked");
+	} else if (lock.curLockState == 10) {
+		$("#current-state").html("Failed to Unlock");
+	} else if (lock.curLockState == 11) {
+		$("#current-state").html("Failed to Lock");
+	} else {
+		$("#current-state").html("Unknown State");
 	}
 	
-	if (state.state === 1) {
-		$("#toggle").html("ON");
+	if (lock.manualsetpoint == 1) {
+		$("#toggle").html("LOCK");
 		$("#toggle").css("background-color", "#ff9600");
 	} else {
-		$("#toggle").html("OFF");
+		$("#toggle").html("UNLOCK");
 		$("#toggle").css("background-color", "#555");
 	}
 	
-	if (state.mode === 0) {
+	if (lock.mode == 0) {
 		$(".mode").css("background-color", "#555");
 		$("#manual_btn").css("background-color", "#ff9600");
 		$("#scheduled_btn").css("background-color", "#555");
@@ -209,19 +219,24 @@ function update() {
 }
 	
 $("#toggle").click(function () {
-    thermostat.state++;
-    if (thermostat.state > 1) thermostat.state = 0;
-    if (thermostat.state == 1) {
-        $("#toggle").html("ON");
-        $(this).css("background-color", "#ff9600");
-    }
-    else {
-        $("#toggle").html("OFF");
-        $(this).css("background-color", "#555");
-    }
-
-    //save("tx/heating",thermostat.state+","+parseInt(setpoint*100));
-    save("thermostat_state", thermostat.state.toString());
+    if (lock.mode == 0){
+	    if (lock.manualsetpoint == 1){
+	    	lock.manualsetpoint = 0
+	    }else{
+	    	lock.manualsetpoint = 1
+	    }
+	    if (lock.manualsetpoint == 1) {
+	        $("#toggle").html("LOCK");
+	        $(this).css("background-color", "#ff9600");
+	    }
+	    else {
+	        $("#toggle").html("UNLOCK");
+	        $(this).css("background-color", "#555");
+	    }
+	
+	    //save("tx/heating",lock.state+","+parseInt(setpoint*100));
+	    save("manualsetpoint", (lock.manualsetpoint).toString());
+	}
 });
 
 
@@ -238,7 +253,7 @@ function draw_day_slider(day) {
         var width = ((schedule[day][z].e - schedule[day][z].s) / 24.0) * 100;
         var color = color_map(schedule[day][z].sp);
 
-        out += "<div class='slider-segment' style='left:" + left + "%; width:" + width + "%; background-color:" + color + "' key=" + key + " title='" + (schedule[day][z].sp == 0 ? "Off" : "On") + "'></div>";
+        out += "<div class='slider-segment' style='left:" + left + "%; width:" + width + "%; background-color:" + color + "' key=" + key + " title='" + (schedule[day][z].sp == 0 ? "Unlocked" : "Locked") + "'></div>";
 
         if (key > 0) {
             out += "<div class='slider-button' style='left:" + left + "%;' key=" + key + "></div>";
@@ -322,7 +337,9 @@ $("body").on("click", ".slider-segment", function (e) {
             schedule[day].splice(key + 1, 0, {
                 s: hour,
                 e: end,
-                sp: schedule[day][key].sp
+                sp: schedule[day][key].sp,
+                al: schedule[day][key].al,
+                at: schedule[day][key].at
             });
 
             draw_day_slider(day);
@@ -332,17 +349,36 @@ $("body").on("click", ".slider-segment", function (e) {
         //editmode = 'move';
     } else if (editmode == 'move') {
         
-        if(schedule[day][key].sp>0)
-            $("#slider-segment-state1").prop('checked', true);
-        else
-            $("#slider-segment-state2").prop('checked', true);
+        if(schedule[day][key].sp == 1){
+            $("#slider-segment-setpoint").prop('checked', true);
+        }else{
+            $("#slider-segment-setpoint").prop('checked', false);
+        }
+        if(schedule[day][key].al == 1){
+            $("#slider-segment-autoLock").prop('checked', true);
+            $("#timeout-block").show();
+        }else{
+            $("#slider-segment-autoLock").prop('checked', false);
+            $("#timeout-block").hide();
+        }  
         
         $("#slider-segment-start").val(format_time(schedule[day][key].s));
         $("#slider-segment-end").val(format_time(schedule[day][key].e));
 
+		$("#slider-segment-timeout").val(schedule[day][key].at);
+		
         $("#slider-segment-block").show();
         $("#slider-segment-block-movepos").hide();
     }
+});
+
+$("body").on("click", "#slider-segment-autoLock", function () {
+	if ( $("#slider-segment-autoLock").is(':checked')) {
+		$("#timeout-block").show();
+	}else{
+		$("#timeout-block").hide();
+	}
+	
 });
 
 function slider_update(e) {
@@ -370,13 +406,21 @@ function slider_update(e) {
 
 $("body").on("click", "#slider-segment-ok", function () {
 
-    if ( $("#slider-segment-state1").is(':checked')) 
+    if ( $("#slider-segment-setpoint").is(':checked')) {
         schedule[day][key].sp = 1;
-    else
+    }else{
         schedule[day][key].sp = 0;
+    }
     
+    if ( $("#slider-segment-autoLock").is(':checked')) {
+        schedule[day][key].al = 1;
+    }else{
+        schedule[day][key].al = 0;
+    }
     var color = color_map(schedule[day][key].sp);
+    var title = schedule[day][key].sp == 0 ? "Unlocked" : "Locked";
     $(".slider[day=" + day + "]").find(".slider-segment[key=" + key + "]").css("background-color", color);
+    $(".slider[day=" + day + "]").find(".slider-segment[key=" + key + "]").css("title", title);
 
     var time = decode_time($("#slider-segment-start").val());
     if (time != -1 && key > 0 && key < schedule[day].length) {
@@ -394,9 +438,21 @@ $("body").on("click", "#slider-segment-ok", function () {
             schedule[day][key].e = time;
             schedule[day][key + 1].s = time;
         }
-    }
+    }else{
+    	if (key == (schedule[day].length - 1)){
+	    	if (time >= (schedule[day][key].s + 0.5)) {
+	            schedule[day][key].e = time;
+	        }
+	    }
+	}
     $("#slider-segment-end").val(format_time(schedule[day][key].e));
     update_slider_ui(day, key + 1);
+    
+    var timeout = parseInt($("#slider-segment-timeout").val(),10)
+    if (timeout > 0) {
+    	schedule[day][key].at = timeout;
+    }
+    
     save("schedule", "{\"" + day + "\":" + JSON.stringify(calc_schedule_esp(schedule[day])) + "}");
     updateclock();
 
@@ -438,27 +494,26 @@ $("#mode-merge").click(function () {
 $("#manual_btn").click(function () {
     $(".mode").css("background-color", "#555");
     $(this).css("background-color", "#ff9600");
-    thermostat.mode = 0;
+    lock.mode = 0;
 	
-	setpoint = thermostat.manualsetpoint;
-	$(".zone-setpoint").html(setpoint.toFixed(1) + "&deg;C");
+	setpoint = lock.manualsetpoint;
 
-    save("thermostat_mode", (thermostat.mode).toString());
+    save("lock_mode", (lock.mode).toString());
     updateclock();
 });
 
 $("#scheduled_btn").click(function () {
     $(".mode").css("background-color", "#555");
     $(this).css("background-color", "#ff9600");
-    thermostat.mode = 1;
-    save("thermostat_mode", (thermostat.mode).toString());
+    lock.mode = 1;
+    save("lock_mode", (lock.mode).toString());
     updateclock();
 });
 
-function color_map(temperature) {
-	if(temperature>0) 
-       return "rgb(200,20,0)";
-    return "rgb(200,200,200)";
+function color_map(setpoint) {
+	if(setpoint == 0) 
+       return "rgb(0,255,0)";
+    return "rgb(255,0,0)";
 }
 
 function update_slider_ui(day, key) {
@@ -500,23 +555,13 @@ function decode_time(timestring) {
     return time;
 }
 
-function calc_average_schedule_temperature() {
-    var sum = 0;
-    for (var d in schedule) {
-        for (var z in schedule[d]) {
-            var hours = (schedule[d][z].e - schedule[d][z].s)
-            sum += (schedule[d][z].sp * hours);
-        }
-    }
-    return sum / (24 * 7.0);
-}
-
 function calc_schedule_esp(sched) {
     var fixsched = JSON.parse(JSON.stringify(sched));
     for (var d in fixsched) {
         fixsched[d].s *= 100;
         fixsched[d].e *= 100;
-        fixsched[d].sp *= 100;
+        fixsched[d].sp *= 1;
+        //fixsched[d].al *= 1;
     }
     return fixsched;
 }
@@ -568,7 +613,7 @@ function server_get() {
 					if(!connected) setStatus("Connected",2,0); 
 					connected=true;
 					output = data;
-					thermostat=data;
+					lock=data;
 					update();
 				}
 			},

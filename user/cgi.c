@@ -180,7 +180,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 				temp, humi, (int)sysCfg.Lock_input==2?1:0, currGPIO12State,(char *)sysCfg.relay1name,(int)sysCfg.Lockopmode, (int)sysCfg.Lockstate, (int)sysCfg.Lockmanualsetpoint,(int)sysCfg.Lockmode);
 
 			*/
-			os_sprintf(buff,"{\"manualsetpoint\":\"1000\"\n,\"mode\":\"0\"\n,\"curLockState\":\"0\"}\n");
+			os_sprintf(buff,"{\"manualsetpoint\":\"%d\"\n,\"mode\":\"%d\"\n,\"curLockState\":\"%d\"}\n",(int)sysCfg.Lockmanualsetpoint,(int)sysCfg.Lockmode, (int)sysCfg.Lockstate);
 		}
 
 		if(os_strcmp(buff,"temperature")==0) {
@@ -196,13 +196,13 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 
 
 		if(os_strcmp(buff,"thermostat_opmode")==0) {
-			if(connData->post->len>0) {
+			//if(connData->post->len>0) {
 			//	sysCfg.Lockopmode=(int)atoi(connData->post->buff);
 			//	CFG_Save();
 			//	os_printf("Handle thermostat opmode (%d) saved\n",(int)sysCfg.Lockopmode);
-			} else {
+			//} else {
 			//	os_sprintf(buff, "%d", (int)sysCfg.Lockopmode);
-			}
+			//}
 		}
 
 
@@ -214,11 +214,10 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 			}
 		}
 
-		if(os_strcmp(buff,"thermostat_state")==0) {
+		if(os_strcmp(buff,"lock_state")==0) {
 			if(connData->post->len>0) {
 			//	sysCfg.Lockstate=(int)atoi(connData->post->buff);
 
-				//Switching off thermostat means force off for relay 1
 			//	currGPIO12State=0;
 			//	ioGPIO(currGPIO12State,12);
 
@@ -239,13 +238,13 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 			}
 		}
 
-		if(os_strcmp(buff,"thermostat_mode")==0) {
+		if(os_strcmp(buff,"lock_mode")==0) {
 			if(connData->post->len>0) {
-			//	sysCfg.Lockmode=(int)atoi(connData->post->buff);
-			//	CFG_Save();
-			//	os_printf("Handle thermostat mode save (%d)\n",(int)sysCfg.Lockmode);
+				sysCfg.Lockmode=(int)atoi(connData->post->buff);
+				CFG_Save();
+				os_printf("Handle lock mode save (%d)\n",(int)sysCfg.Lockmode);
 			} else {
-			//	os_sprintf(buff, "%d", (int)sysCfg.Lockmode);
+				os_sprintf(buff, "%d", (int)sysCfg.Lockmode);
 			}
 
 		}
@@ -257,7 +256,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 
 					int r;
 					jsmn_parser p;
-					jsmntok_t t[64]; /* We expect no more than 64 tokens per day*/
+					jsmntok_t t[128]; /* We expect no more than 64 tokens per day*/
 
 					jsmn_init(&p);
 					r = jsmn_parse(&p, connData->post->buff, strlen(connData->post->buff) , t, sizeof(t)/sizeof(t[0]));
@@ -286,12 +285,13 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 						return HTTPD_CGI_DONE;
 					}
 
+
 					os_printf("Schedule for %s found\n",days[found]);
 
 					int sched=0;
-					for (int i = 3; i < r && sched <8; i+=7) {	//skip the day and day array strings
+					for (int i = 3; i < r && sched <8; i+=11) {	//skip the day and day array strings
 
-					//Number of tokens will be 1 for the day+1 for the day data + (number of schedules * 7 tokens in a schedule element (one for the schedule itself then 6 tokens for start:val,end:val,setpoint:val)
+					//Number of tokens will be 1 for the day+1 for the day data + (number of schedules * 9 tokens in a schedule element (one for the schedule itself then 8 tokens for start:val,end:val,setpoint:val,autolock:val)
 
 						os_memcpy(temp, connData->post->buff + t[i+2].start,t[i+2].end - t[i+2].start);
 						temp[t[i+2].end - t[i+2].start]=0x0;
@@ -308,12 +308,27 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 						os_sprintf(buff+strlen(buff),"Setpoint = %s\n", temp);
 						sysCfg.Lockschedule.weekSched[found].daySched[sched].setpoint=atoi(temp);
 
+						os_memcpy(temp, connData->post->buff + t[i+8].start,t[i+8].end - t[i+8].start);
+						temp[t[i+8].end - t[i+8].start]=0x0;
+						os_sprintf(buff+strlen(buff),"AutoLock = %s\n", temp);
+						sysCfg.Lockschedule.weekSched[found].daySched[sched].autolock=atoi(temp);
+
+						os_memcpy(temp, connData->post->buff + t[i+10].start,t[i+10].end - t[i+10].start);
+						temp[t[i+10].end - t[i+10].start]=0x0;
+						os_sprintf(buff+strlen(buff),"AutoTimeout = %s\n", temp);
+						sysCfg.Lockschedule.weekSched[found].daySched[sched].autotimeout=atoi(temp);
+
 						sysCfg.Lockschedule.weekSched[found].daySched[sched].active=1;
 
 						sched++;
 					}
 					if(sched<8)
 						sysCfg.Lockschedule.weekSched[found].daySched[sched].active=0;	//mark the next schedule as inactive
+
+					if(sched>=8) {
+						os_printf("Too many elements in Schedule\n");
+						return HTTPD_CGI_DONE;
+					}
 
 					os_printf(buff);
 					CFG_Save();
@@ -324,7 +339,7 @@ int ICACHE_FLASH_ATTR cgiSchedule(HttpdConnData *connData) {
 				for(int dow=0; dow<7; dow++) {
 					os_sprintf(buff+strlen(buff),"\"%s\":[",days[dow]);
 					for(int sched=0; sched<8 && sysCfg.Lockschedule.weekSched[dow].daySched[sched].active==1; sched++) {
-						os_sprintf(buff+strlen(buff),"{\"s\":%d,\"e\":%d,\"sp\":%d,\"al\":%d}",sysCfg.Lockschedule.weekSched[dow].daySched[sched].start,sysCfg.Lockschedule.weekSched[dow].daySched[sched].end,sysCfg.Lockschedule.weekSched[dow].daySched[sched].setpoint,0);
+						os_sprintf(buff+strlen(buff),"{\"s\":%d,\"e\":%d,\"sp\":%d,\"al\":%d,\"at\":%d}",sysCfg.Lockschedule.weekSched[dow].daySched[sched].start,sysCfg.Lockschedule.weekSched[dow].daySched[sched].end,sysCfg.Lockschedule.weekSched[dow].daySched[sched].setpoint,sysCfg.Lockschedule.weekSched[dow].daySched[sched].autolock,sysCfg.Lockschedule.weekSched[dow].daySched[sched].autotimeout);
 							if(sched<7 && sysCfg.Lockschedule.weekSched[dow].daySched[sched+1].active==1)
 							os_sprintf(buff+strlen(buff),",");
 					}

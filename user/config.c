@@ -109,31 +109,41 @@ void ICACHE_FLASH_ATTR CFG_Load()
 		sysCfg.Lockmode=LOCK_MANUAL;
 		sysCfg.Lockopmode=UNLOCKED;
 		
-		//Build default schedule for the thermostat
+		//Build default schedule for the Lock
 		for(int dow=0; dow<7; dow++) {
 			sysCfg.Lockschedule.weekSched[dow].daySched[0].start=0; //0am
 			sysCfg.Lockschedule.weekSched[dow].daySched[0].end=600; //6am, hours are * 100
-			sysCfg.Lockschedule.weekSched[dow].daySched[0].setpoint=1000; //10.0*C
+			sysCfg.Lockschedule.weekSched[dow].daySched[0].setpoint=1; //Lock
+			sysCfg.Lockschedule.weekSched[dow].daySched[0].autolock=1; //Auto Locked
+			sysCfg.Lockschedule.weekSched[dow].daySched[0].autotimeout=30; //Auto Timeout, for relocking
 			sysCfg.Lockschedule.weekSched[dow].daySched[0].active=1;
 			
 			sysCfg.Lockschedule.weekSched[dow].daySched[1].start=600;
 			sysCfg.Lockschedule.weekSched[dow].daySched[1].end=900;
-			sysCfg.Lockschedule.weekSched[dow].daySched[1].setpoint=1800;
+			sysCfg.Lockschedule.weekSched[dow].daySched[1].setpoint=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[1].autolock=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[1].autotimeout=30;
 			sysCfg.Lockschedule.weekSched[dow].daySched[1].active=1;
 			
 			sysCfg.Lockschedule.weekSched[dow].daySched[2].start=900;
 			sysCfg.Lockschedule.weekSched[dow].daySched[2].end=1700;
-			sysCfg.Lockschedule.weekSched[dow].daySched[2].setpoint=1600;
+			sysCfg.Lockschedule.weekSched[dow].daySched[2].setpoint=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[2].autolock=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[2].autotimeout=30;
 			sysCfg.Lockschedule.weekSched[dow].daySched[2].active=1;
 			
 			sysCfg.Lockschedule.weekSched[dow].daySched[3].start=1700;
 			sysCfg.Lockschedule.weekSched[dow].daySched[3].end=2200;
-			sysCfg.Lockschedule.weekSched[dow].daySched[3].setpoint=2100;
+			sysCfg.Lockschedule.weekSched[dow].daySched[3].setpoint=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[3].autolock=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[3].autotimeout=30;
 			sysCfg.Lockschedule.weekSched[dow].daySched[3].active=1;
 
 			sysCfg.Lockschedule.weekSched[dow].daySched[4].start=2200;
 			sysCfg.Lockschedule.weekSched[dow].daySched[4].end=2400;
-			sysCfg.Lockschedule.weekSched[dow].daySched[4].setpoint=1500;
+			sysCfg.Lockschedule.weekSched[dow].daySched[4].setpoint=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[4].autolock=1;
+			sysCfg.Lockschedule.weekSched[dow].daySched[4].autotimeout=30;
 			sysCfg.Lockschedule.weekSched[dow].daySched[4].active=1;
 			
 			sysCfg.Lockschedule.weekSched[dow].daySched[5].active=0; //Terminate

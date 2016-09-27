@@ -142,8 +142,13 @@ input[type=text] {
     text-align:right;
 }
 
-#slider-segment-blank {
+#timeout-block {
+    position: absolute;
     height:20px;
+}
+
+#slider-segment-blank {
+    height:40px;
     font-size:14px;
 }
 

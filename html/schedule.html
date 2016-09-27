@@ -21,8 +21,12 @@
     <div id="slider-segment-blank">
         <div id="slider-segment-block" style="display:none">Start:
             <input type="text" id="slider-segment-start" style="margin-right:4px" />End:
-            <input type="text" id="slider-segment-end" style="margin-right:4px" />Auto Lock
-            <input type="checkbox" id="slider-segment-autoLock" /><span id="unit"></span>
+            <input type="text" id="slider-segment-end" style="margin-right:4px" />Lock 
+            <input type="checkbox" id="slider-segment-setpoint" />Auto Retry
+            <input type="checkbox" id="slider-segment-autoLock" />
+            <div id="timeout-block" style="display:none"> Timeout:
+            	<input type="text" id="slider-segment-timeout" style="margin-right:4px" />
+            </div>
             <button id="slider-segment-ok" style="float:right">OK</button>
         </div>
         <div id="slider-segment-block-movepos" style="display:none">TIME:
