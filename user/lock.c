@@ -19,8 +19,8 @@
 
 #define LOCKGPIO	14
 #define UNLOCKGPIO	12
-#define LOCKEDGPIO	13
-#define UNLOCKEDGPIO	15
+#define LOCKEDGPIO	0
+#define UNLOCKEDGPIO	2
 
 #define FAILTIMEOUT	5000 //failed to lock/unlock time in ms
 #define FAILTIMEOUTTMR	(FAILTIMEOUT/10)
@@ -42,7 +42,7 @@ static int ICACHE_FLASH_ATTR wd(int year, int month, int day) {
 
 static void ICACHE_FLASH_ATTR lockDwellTimerCb(void *arg) {
 	static int cnt=0;
-	if (!GPIO_INPUT_GET(LOCKEDGPIO)) {
+	if (GPIO_INPUT_GET(LOCKEDGPIO)) {
 		cnt++;
 	} else {
 		sysCfg.Lockstate = LOCKED;
@@ -60,7 +60,7 @@ static void ICACHE_FLASH_ATTR lockDwellTimerCb(void *arg) {
 
 static void ICACHE_FLASH_ATTR unlockDwellTimerCb(void *arg) {
 	static int cnt=0;
-	if (!GPIO_INPUT_GET(UNLOCKEDGPIO)) {
+	if (GPIO_INPUT_GET(UNLOCKEDGPIO)) {
 		cnt++;
 	} else {
 		sysCfg.Lockstate = UNLOCKED;
@@ -79,14 +79,14 @@ static void ICACHE_FLASH_ATTR unlockDwellTimerCb(void *arg) {
 void ICACHE_FLASH_ATTR lock(int lock, int autoRetry, int retryTimeout)
 {
 	if (lock) {
-		if (!GPIO_INPUT_GET(LOCKEDGPIO)) {
+		if (GPIO_INPUT_GET(LOCKEDGPIO)) {
 			os_timer_disarm(&unlockDwellTimer);
 			gpio_output_set((1<<LOCKGPIO), 0, (1<<LOCKGPIO), 0);
 			gpio_output_set(0, (1<<UNLOCKGPIO), (1<<UNLOCKGPIO), 0);
 			os_timer_arm(&lockDwellTimer, FAILTIMEOUTTMR, 1);
 		}
 	} else {
-		if (!GPIO_INPUT_GET(UNLOCKEDGPIO)) {
+		if (GPIO_INPUT_GET(UNLOCKEDGPIO)) {
 			os_timer_disarm(&lockDwellTimer);
 			gpio_output_set(0, (1<<LOCKGPIO), (1<<LOCKGPIO), 0);
 			gpio_output_set((1<<UNLOCKGPIO), 0, (1<<UNLOCKGPIO), 0);
@@ -98,19 +98,21 @@ void ICACHE_FLASH_ATTR lock(int lock, int autoRetry, int retryTimeout)
 void ICACHE_FLASH_ATTR manualLock(int lock)
 {
 	if (lock) {
-		if (!GPIO_INPUT_GET(LOCKEDGPIO)) {
+		if (GPIO_INPUT_GET(LOCKEDGPIO)) {
 			os_timer_disarm(&unlockDwellTimer);
 			gpio_output_set((1<<LOCKGPIO), 0, (1<<LOCKGPIO), 0);
 			gpio_output_set(0, (1<<UNLOCKGPIO), (1<<UNLOCKGPIO), 0);
 			os_timer_arm(&lockDwellTimer, FAILTIMEOUTTMR, 1);
-		}
+		} else
+			sysCfg.Lockstate = LOCKED;
 	} else {
-		if (!GPIO_INPUT_GET(UNLOCKEDGPIO)) {
+		if (GPIO_INPUT_GET(UNLOCKEDGPIO)) {
 			os_timer_disarm(&lockDwellTimer);
 			gpio_output_set(0, (1<<LOCKGPIO), (1<<LOCKGPIO), 0);
 			gpio_output_set((1<<UNLOCKGPIO), 0, (1<<UNLOCKGPIO), 0);
 			os_timer_arm(&unlockDwellTimer, FAILTIMEOUTTMR, 1);
-		}
+		} else
+			sysCfg.Lockstate = UNLOCKED;
 	}
 }
 
@@ -164,10 +166,17 @@ void ICACHE_FLASH_ATTR lock_init(uint32_t polltime){
 	os_timer_disarm(&unlockDwellTimer);
 	os_timer_setfn(&unlockDwellTimer, unlockDwellTimerCb, NULL);
 
+	PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO0_U);
+	//PIN_PULLDOWN_EN(PERIPHS_IO_MUX_MTCK_U);
+	PIN_PULLUP_EN(PERIPHS_IO_MUX_GPIO2_U);
+	//PIN_PULLDOWN_EN(PERIPHS_IO_MUX_MTDO_U);
+
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_GPIO15);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
+
+
 	gpio_output_set(0, 0, (1<<LOCKGPIO)|(1<<UNLOCKGPIO), (1<<LOCKEDGPIO)|(1<<UNLOCKEDGPIO));
 
 }

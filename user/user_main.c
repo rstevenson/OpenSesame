@@ -161,7 +161,7 @@ static void ICACHE_FLASH_ATTR prHeapTimerCb(void *arg) {
 
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
 void user_init(void) {
-	stdoutInit();
+	//stdoutInit();
 	ioInit();
 	captdnsInit();
 	CFG_Load();
